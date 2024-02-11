@@ -1,0 +1,33 @@
+version: '3.8'
+
+services:
+  producer:
+    build:
+      dockerfile: producer.Dockerfile
+    environment:
+      TOKEN: '${TOKEN}'
+    restart: unless-stopped
+    ports:
+      - '8443:8443'
+    depends_on:
+      - queue
+
+  consumer:
+    build:
+      dockerfile: consumer.Dockerfile
+    environment:
+      TOKEN: '${TOKEN}'
+    restart: unless-stopped
+    depends_on:
+      - queue
+
+  queue:
+    image: rabbitmq:management
+    hostname: rabbit
+    volumes:
+      - rabbitmq:/var/lib/rabbitmq
+    ports:
+      - '15672:15672'
+
+volumes:
+  rabbitmq:
