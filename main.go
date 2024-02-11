@@ -17,10 +17,18 @@ func main() {
 	initQueue(queueCon)
 
 	router := chi.NewRouter()
+	router.Post("/webhook", getHandler(queueCon))
 
-	router.Post("/webhook", func(w http.ResponseWriter, r *http.Request) {
+	if err := http.ListenAndServe("0.0.0.0:8443", router); err != nil {
+		log.Fatal(err)
+	}
+}
+
+func getHandler(queueCon *amqp.Connection) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
 		body, err := io.ReadAll(r.Body)
 		if err != nil {
+			println(err.Error())
 			return
 		}
 
@@ -29,11 +37,6 @@ func main() {
 		}
 
 		render.Status(r, http.StatusOK)
-	})
-
-	log.Print("listen")
-	if err := http.ListenAndServe("0.0.0.0:8443", router); err != nil {
-		log.Fatal(err)
 	}
 }
 
@@ -51,7 +54,8 @@ func produceUpdate(queueCon *amqp.Connection, update json.RawMessage) error {
 	if err != nil {
 		return err
 	}
-	err = ch.PublishWithContext(ctx,
+
+	return ch.PublishWithContext(ctx,
 		"",
 		"updates",
 		false,
@@ -61,10 +65,6 @@ func produceUpdate(queueCon *amqp.Connection, update json.RawMessage) error {
 			ContentType:  "application/json",
 			Body:         body,
 		})
-	if err != nil {
-		return err
-	}
-	return nil
 }
 
 func initQueue(con *amqp.Connection) {
@@ -90,7 +90,6 @@ func initQueue(con *amqp.Connection) {
 func setupRabbitMQConnection() *amqp.Connection {
 	con, err := amqp.Dial("amqp://guest:guest@rabbit:5672/")
 	if err != nil {
-		println(err.Error())
 		panic(err)
 	}
 	return con

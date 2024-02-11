@@ -4,8 +4,6 @@ services:
   producer:
     build:
       dockerfile: producer.Dockerfile
-    environment:
-      TOKEN: '${TOKEN}'
     restart: unless-stopped
     ports:
       - '8443:8443'
@@ -15,8 +13,6 @@ services:
   consumer:
     build:
       dockerfile: consumer.Dockerfile
-    environment:
-      TOKEN: '${TOKEN}'
     restart: unless-stopped
     depends_on:
       - queue
