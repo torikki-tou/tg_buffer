@@ -11,7 +11,7 @@ dp = aiogram.Dispatcher()
 
 
 async def main():
-    con = await pika.connect("amqp://guest:guest@rabbit")
+    con = await pika.connect_robust("amqp://guest:guest@0.0.0.0:5672/")
     channel = await con.channel()
 
     queue = await channel.declare_queue("updates", durable=True)
